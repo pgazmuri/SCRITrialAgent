@@ -1,0 +1,565 @@
+/**
+ * SCRI Trial Agent - In-Page Tabbed Interface Styles
+ * ChatGPT-style centered welcome, bottom input after chat starts
+ */
+
+/* Wrapper */
+#scri-agent-wrapper {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a202c;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tabs Container */
+.scri-agent-tabs-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin: 20px auto;
+  width: 78%;
+  overflow: hidden;
+}
+
+/* Tab Navigation */
+.scri-agent-tab-nav {
+  display: flex;
+  background: linear-gradient(135deg, #1a4c8b 0%, #0d2847 100%);
+  padding: 0;
+  border-bottom: none;
+}
+
+.scri-agent-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.scri-agent-tab-btn:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scri-agent-tab-btn.active {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.15);
+  border-bottom-color: #10a37f;
+}
+
+.scri-agent-tab-btn span {
+  color: inherit !important;
+}
+
+.scri-agent-tab-icon {
+  font-size: 16px;
+}
+
+/* Tab Content - Fixed height container, children handle their own scroll */
+.scri-agent-tab-content {
+  height: 500px;
+  overflow: hidden;
+}
+
+.scri-agent-tab-panel {
+  display: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scri-agent-tab-panel.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Chat Container */
+.scri-agent-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f7f8fa;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ============================================
+   WELCOME STATE (Centered - ChatGPT style)
+   ============================================ */
+.scri-agent-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.scri-agent-welcome-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 4px 12px rgba(16, 163, 127, 0.3));
+}
+
+.scri-agent-welcome-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a4c8b;
+  margin: 0 0 8px 0;
+}
+
+.scri-agent-welcome-subtitle {
+  font-size: 14px;
+  color: #718096;
+  margin: 0 0 24px 0;
+  max-width: 400px;
+}
+
+/* Welcome Input Area */
+.scri-agent-welcome-input-area {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 8px 8px 8px 20px;
+  border: 2px solid #e2e8f0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.scri-agent-welcome-input-area:focus-within {
+  border-color: #1a4c8b;
+  box-shadow: 0 0 0 3px rgba(26, 76, 139, 0.1);
+}
+
+.scri-agent-welcome-input-area .scri-agent-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #1a202c;
+  font-size: 16px;
+  padding: 8px 0;
+  outline: none;
+}
+
+.scri-agent-welcome-input-area .scri-agent-input::placeholder {
+  color: #a0aec0;
+}
+
+.scri-agent-welcome-input-area .scri-agent-send-btn {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #1a4c8b 0%, #0d2847 100%);
+  border-radius: 50%;
+}
+
+.scri-agent-welcome-input-area .scri-agent-send-btn:hover {
+  box-shadow: 0 4px 12px rgba(26, 76, 139, 0.3);
+}
+
+/* Suggestion Buttons */
+.scri-agent-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: center;
+  max-width: 600px;
+}
+
+.scri-agent-suggestion {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 8px 14px;
+  color: #4a5568;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.scri-agent-suggestion:hover {
+  background: #f7f8fa;
+  border-color: #1a4c8b;
+  color: #1a4c8b;
+}
+
+/* ============================================
+   ACTIVE CHAT STATE (Bottom input)
+   ============================================ */
+.scri-agent-chat-active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Messages Container */
+.scri-agent-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0; /* Critical for flex overflow */
+}
+
+/* Individual Message */
+.scri-agent-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+  animation: scri-agent-fadeIn 0.3s ease;
+}
+
+@keyframes scri-agent-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scri-agent-message-user {
+  align-self: flex-end;
+}
+
+.scri-agent-message-assistant {
+  align-self: flex-start;
+}
+
+.scri-agent-message-content {
+  padding: 14px 18px;
+  border-radius: 16px;
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.scri-agent-message-user .scri-agent-message-content {
+  background: linear-gradient(135deg, #1a4c8b 0%, #0d2847 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.scri-agent-message-assistant .scri-agent-message-content {
+  background: #ffffff;
+  color: #1a202c;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.scri-agent-message-content h3,
+.scri-agent-message-content h4 {
+  margin: 12px 0 8px 0;
+  color: #1a4c8b;
+  font-size: 15px;
+}
+
+.scri-agent-message-content h3:first-child,
+.scri-agent-message-content h4:first-child {
+  margin-top: 0;
+}
+
+.scri-agent-message-content strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
+.scri-agent-message-content a {
+  color: #1a4c8b;
+  text-decoration: underline;
+}
+
+.scri-agent-message-content a:hover {
+  color: #0d2847;
+}
+
+.scri-agent-message-content .bullet {
+  color: #1a4c8b;
+  font-weight: bold;
+}
+
+/* Loading Indicator */
+.scri-agent-loading {
+  display: flex;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.scri-agent-loading span {
+  width: 10px;
+  height: 10px;
+  background: #a0aec0;
+  border-radius: 50%;
+  animation: scri-agent-bounce 1.4s infinite ease-in-out both;
+}
+
+.scri-agent-loading span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.scri-agent-loading span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes scri-agent-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Trial Cards */
+.scri-agent-trials {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.scri-agent-trial-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scri-agent-trial-card:hover {
+  border-color: #1a4c8b;
+  box-shadow: 0 4px 12px rgba(26, 76, 139, 0.15);
+  transform: translateY(-1px);
+}
+
+.scri-agent-trial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.scri-agent-trial-header strong {
+  color: #1a4c8b;
+  font-size: 15px;
+}
+
+.scri-agent-trial-phase {
+  font-size: 11px;
+  color: white;
+  background: #38a169;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.scri-agent-trial-nct {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 6px;
+}
+
+.scri-agent-trial-title {
+  font-size: 13px;
+  color: #4a5568;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scri-agent-trial-location {
+  font-size: 12px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Trial Card Links */
+.scri-agent-trial-links {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.scri-agent-trial-link {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.scri-agent-trial-link-primary {
+  background: linear-gradient(135deg, #1a4c8b 0%, #0d2847 100%);
+  color: white !important;
+}
+
+.scri-agent-trial-link-primary:hover {
+  box-shadow: 0 2px 8px rgba(26, 76, 139, 0.3);
+  transform: translateY(-1px);
+}
+
+.scri-agent-trial-link-secondary {
+  background: #f7f8fa;
+  color: #4a5568 !important;
+  border: 1px solid #e2e8f0;
+}
+
+.scri-agent-trial-link-secondary:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* Bottom Input Area (Active Chat) */
+.scri-agent-input-area-bottom {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.scri-agent-input-area-bottom .scri-agent-input {
+  flex: 1;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a202c;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  max-height: 100px;
+  line-height: 1.4;
+}
+
+.scri-agent-input-area-bottom .scri-agent-input:focus {
+  border-color: #1a4c8b;
+  box-shadow: 0 0 0 3px rgba(26, 76, 139, 0.1);
+}
+
+.scri-agent-input-area-bottom .scri-agent-input::placeholder {
+  color: #a0aec0;
+}
+
+.scri-agent-send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #1a4c8b 0%, #0d2847 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.scri-agent-send-btn:hover {
+  box-shadow: 0 4px 12px rgba(26, 76, 139, 0.3);
+  transform: scale(1.05);
+}
+
+.scri-agent-send-btn:active {
+  transform: scale(0.95);
+}
+
+.scri-agent-send-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: white !important;
+  fill: none !important;
+}
+
+/* Search Tab - Original Content */
+#scri-agent-original-content {
+  padding: 20px;
+  background: #fff;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Scrollbar Styling */
+.scri-agent-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scri-agent-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scri-agent-messages::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.scri-agent-messages::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scri-agent-tabs-container {
+    margin: 10px;
+    border-radius: 8px;
+  }
+
+  .scri-agent-tab-btn {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .scri-agent-welcome-title {
+    font-size: 24px;
+  }
+
+  .scri-agent-welcome-input-area {
+    max-width: 100%;
+  }
+
+  .scri-agent-suggestions {
+    flex-direction: column;
+  }
+
+  .scri-agent-message {
+    max-width: 90%;
+  }
+}

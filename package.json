@@ -1,0 +1,34 @@
+{
+  "name": "scri-trial-agent",
+  "version": "1.0.0",
+  "description": "AI-powered browser extension for finding clinical trials on SCRI",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "package": "npm run build && node scripts/create-zip.js",
+    "dev": "vite",
+    "cli": "tsx src/cli/index.ts",
+    "cli:quality": "tsx src/cli/quality-agent.ts",
+    "test:session": "tsx src/cli/test-session.ts",
+    "test:integration": "tsx src/cli/integration-test.ts",
+    "explore": "tsx src/cli/explore-api.ts",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openai": "^4.73.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "@types/node": "^20.10.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "eslint": "^8.55.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

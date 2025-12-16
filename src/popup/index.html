@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCRI Trial Agent</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="popup-logo">🔬</div>
+      <div class="popup-title">
+        <h1>SCRI Trial Agent</h1>
+        <span class="popup-subtitle">AI-Powered Clinical Trial Assistant</span>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="chat">
+        💬 Chat
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        ⚙️ Settings
+      </button>
+    </nav>
+
+    <main class="popup-content">
+      <!-- Chat Tab (Default) -->
+      <div id="chat-tab" class="tab-content active">
+        <div class="chat-container">
+          <div id="chat-messages" class="chat-messages">
+            <div class="chat-welcome">
+              <div class="welcome-icon">🩺</div>
+              <h3>Welcome to SCRI Trial Navigator</h3>
+              <p>I can help you find clinical trials that match your needs. Tell me about:</p>
+              <ul>
+                <li>Your cancer type and diagnosis</li>
+                <li>Where you're located (ZIP code)</li>
+                <li>Any previous treatments</li>
+              </ul>
+              <p class="welcome-hint">I'll be honest about travel distances and help you find the best options.</p>
+            </div>
+          </div>
+          
+          <div class="chat-input-container">
+            <textarea 
+              id="chat-input" 
+              placeholder="Type your message... (e.g., 'I have breast cancer and live in Boston')"
+              rows="2"
+            ></textarea>
+            <button id="send-btn" class="btn btn-primary btn-send">
+              <span class="send-icon">➤</span>
+            </button>
+          </div>
+          
+          <div class="chat-status">
+            <span id="chat-status-text"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settings-tab" class="tab-content">
+        <!-- API Key Section -->
+        <section class="popup-section" id="api-key-section">
+          <h2>OpenAI API Key</h2>
+          <div id="api-key-status" class="api-key-status">
+            <span class="status-indicator status-unconfigured"></span>
+            <span class="status-text">Not configured</span>
+          </div>
+          <div class="input-group">
+            <input 
+              type="password" 
+              id="api-key-input" 
+              placeholder="sk-..." 
+              autocomplete="off"
+            >
+            <button id="save-api-key" class="btn btn-primary">Save</button>
+          </div>
+          <p class="help-text">
+            Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Dashboard</a>
+          </p>
+        </section>
+
+        <!-- Patient Profile Section -->
+        <section class="popup-section">
+          <h2>Patient Profile</h2>
+          <p class="section-description">
+            Add details to help find more relevant trials (all fields optional)
+          </p>
+
+          <div class="form-group">
+            <label for="cancer-type">Cancer Type</label>
+            <select id="cancer-type">
+              <option value="">Select...</option>
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="zip-code">ZIP Code</label>
+              <input type="text" id="zip-code" placeholder="e.g., 37203" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label for="travel-radius">Travel Radius (mi)</label>
+              <input type="number" id="travel-radius" placeholder="50" min="0" max="500">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="age">Age</label>
+              <input type="number" id="age" placeholder="e.g., 55" min="0" max="120">
+            </div>
+            <div class="form-group">
+              <label for="stage">Stage</label>
+              <select id="stage">
+                <option value="">Select...</option>
+                <option value="Stage 0">Stage 0</option>
+                <option value="Stage I">Stage I</option>
+                <option value="Stage II">Stage II</option>
+                <option value="Stage III">Stage III</option>
+                <option value="Stage IV">Stage IV</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="previous-treatments">Previous Treatments</label>
+            <input 
+              type="text" 
+              id="previous-treatments" 
+              placeholder="e.g., chemotherapy, radiation"
+            >
+            <span class="help-text">Comma-separated list</span>
+          </div>
+
+          <button id="save-profile" class="btn btn-primary btn-full">Save Profile</button>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="popup-section">
+          <h2>Quick Actions</h2>
+          <div class="quick-actions">
+            <button id="open-scri" class="btn btn-secondary">
+              🌐 Open SCRI Trials
+            </button>
+            <button id="clear-data" class="btn btn-danger">
+              🗑️ Clear All Data
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="popup-footer">
+      <span>v1.0.0</span>
+      <span>•</span>
+      <a href="https://github.com/your-repo/scri-trial-agent" target="_blank">GitHub</a>
+    </footer>
+  </div>
+
+  <script src="./index.ts" type="module"></script>
+</body>
+</html>
