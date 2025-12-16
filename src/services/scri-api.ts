@@ -159,7 +159,7 @@ export class SCRIApiClient {
       closestLocation,
       // Include all locations sorted by distance for filtering
       allLocations: sortedLocations.length > 0 ? sortedLocations : locationsWithDistance,
-      scriUrl: `https://trials.scri.com/trial/${trial.studyId}`,
+      scriUrl: `https://trials.scri.com/trialdetail/${trial.studyId}`,
       ctGovUrl: trial.nct ? `https://clinicaltrials.gov/study/${trial.nct}` : '',
     };
   }

@@ -1,6 +1,6 @@
 {
   "name": "scri-trial-agent",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AI-powered browser extension for finding clinical trials on SCRI",
   "type": "module",
   "scripts": {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SCRI Clinical Trial Agent",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "AI-powered assistant for finding relevant clinical trials on SCRI",
   "update_url": "https://raw.githubusercontent.com/pgazmuri/SCRITrialAgent/main/updates.xml",
   "permissions": [
@@ -18,7 +18,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://trials.scri.com/*"],
+      "matches": ["https://trials.scri.com/"],
       "js": ["content/index.js"],
       "css": ["content/styles.css"]
     }

@@ -190,6 +190,143 @@ function createTabbedInterface(searchContainer: HTMLElement): void {
 
   // Attach event listeners
   attachEventListeners();
+  
+  // Check for API key and show setup prompt if needed
+  checkApiKeyStatus();
+}
+
+/**
+ * Check if API key is configured and update UI accordingly
+ */
+async function checkApiKeyStatus(): Promise<void> {
+  try {
+    const response = await chrome.runtime.sendMessage({
+      type: 'GET_API_KEY',
+      payload: {},
+    });
+    
+    if (!response?.hasKey) {
+      showApiKeySetupPrompt();
+    }
+  } catch (error) {
+    console.error('Failed to check API key status:', error);
+    showApiKeySetupPrompt();
+  }
+}
+
+/**
+ * Show a prompt to set up the API key
+ */
+function showApiKeySetupPrompt(): void {
+  const welcome = document.getElementById('scri-agent-welcome');
+  if (!welcome) return;
+  
+  // Replace welcome content with setup prompt
+  welcome.innerHTML = `
+    <div class="scri-agent-welcome-icon">🔑</div>
+    <h1 class="scri-agent-welcome-title">One-Time Setup</h1>
+    <p class="scri-agent-welcome-subtitle">Enter your OpenAI API key to enable the AI Trial Navigator</p>
+    
+    <div class="scri-agent-api-key-form">
+      <div class="scri-agent-api-key-input-wrapper">
+        <input 
+          type="password" 
+          id="scri-agent-api-key-input" 
+          class="scri-agent-api-key-input"
+          placeholder="sk-proj-..."
+          autocomplete="off"
+        />
+        <button id="scri-agent-toggle-key" class="scri-agent-toggle-key" type="button" aria-label="Show/hide key">
+          👁️
+        </button>
+      </div>
+      <button id="scri-agent-save-key" class="scri-agent-save-key-btn">
+        Save & Start Chatting
+      </button>
+      <p id="scri-agent-key-error" class="scri-agent-key-error" style="display: none;"></p>
+    </div>
+    
+    <p class="scri-agent-key-help">
+      Don't have an API key? <a href="https://platform.openai.com/api-keys" target="_blank">Get one here</a> (requires OpenAI account)
+    </p>
+    <p class="scri-agent-key-privacy">
+      🔒 Your key is stored locally in your browser and never sent anywhere except OpenAI.
+    </p>
+  `;
+  
+  // Add event listeners
+  const input = document.getElementById('scri-agent-api-key-input') as HTMLInputElement;
+  const saveBtn = document.getElementById('scri-agent-save-key');
+  const toggleBtn = document.getElementById('scri-agent-toggle-key');
+  const errorEl = document.getElementById('scri-agent-key-error');
+  
+  // Toggle password visibility
+  toggleBtn?.addEventListener('click', () => {
+    if (input.type === 'password') {
+      input.type = 'text';
+      toggleBtn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      toggleBtn.textContent = '👁️';
+    }
+  });
+  
+  // Save key
+  const saveKey = async () => {
+    const key = input.value.trim();
+    
+    if (!key) {
+      if (errorEl) {
+        errorEl.textContent = 'Please enter your API key';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+    
+    if (!key.startsWith('sk-')) {
+      if (errorEl) {
+        errorEl.textContent = 'Invalid API key format. Keys should start with "sk-"';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+    
+    // Disable button while saving
+    if (saveBtn) {
+      saveBtn.textContent = 'Saving...';
+      (saveBtn as HTMLButtonElement).disabled = true;
+    }
+    
+    try {
+      await chrome.runtime.sendMessage({
+        type: 'SET_API_KEY',
+        payload: { key },
+      });
+      
+      // Reload to show the normal welcome screen
+      window.location.reload();
+    } catch (error) {
+      if (errorEl) {
+        errorEl.textContent = 'Failed to save key. Please try again.';
+        errorEl.style.display = 'block';
+      }
+      if (saveBtn) {
+        saveBtn.textContent = 'Save & Start Chatting';
+        (saveBtn as HTMLButtonElement).disabled = false;
+      }
+    }
+  };
+  
+  saveBtn?.addEventListener('click', saveKey);
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveKey();
+    }
+  });
+  
+  // Focus input
+  input?.focus();
 }
 
 /**
@@ -463,7 +600,7 @@ function renderMessages(): void {
           <div class="scri-agent-trials">
             ${msg.trials.slice(0, 5).map((trial) => {
               // Build SCRI URL from ID if not provided
-              const scriUrl = trial.scriUrl || (trial.id ? `https://trials.scri.com/trial/${trial.id}` : '#');
+              const scriUrl = trial.scriUrl || (trial.id ? `https://trials.scri.com/trialdetail/${trial.id}` : '#');
               // Build location display - handles both TrialSummary and TrialSearchResult formats
               let locationHtml = '';
               if (trial.closestLocation) {

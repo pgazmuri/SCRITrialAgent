@@ -376,7 +376,7 @@ Help patients find the RIGHT clinical trial, not just ANY clinical trial. Qualit
             closestCity,
             closestState,
             distance,
-            scriUrl: `https://trials.scri.com/trial/${t.studyId}`,
+            scriUrl: `https://trials.scri.com/trialdetail/${t.studyId}`,
           };
         });
         
@@ -557,7 +557,7 @@ Help patients find the RIGHT clinical trial, not just ANY clinical trial. Qualit
 
     // Create initial response
     let response = await this.openai.responses.create({
-      model: 'gpt-5-mini',
+      model: 'gpt-5-nano',
       instructions: this.getSystemPrompt(),
       input,
       tools: AGENT_TOOLS,
@@ -635,7 +635,7 @@ Help patients find the RIGHT clinical trial, not just ANY clinical trial. Qualit
 
       // Continue conversation with tool results, chaining from current response
       response = await this.openai.responses.create({
-        model: 'gpt-5-mini',
+        model: 'gpt-5-nano',
         instructions: this.getSystemPrompt(),
         input: toolResults,
         tools: AGENT_TOOLS,
