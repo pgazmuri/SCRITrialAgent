@@ -12,18 +12,23 @@ An AI-powered browser extension that helps patients find relevant clinical trial
 
 ## 📦 Installation
 
-### Prerequisites
+### Option 1: Download Release (Recommended)
 
-- Node.js 18+ and npm
-- Chrome browser (or any Chromium-based browser)
-- OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+1. Download the latest `scri-trial-agent-v*.zip` from [Releases](https://github.com/pgazmuri/SCRITrialAgent/releases) or the repo root
+2. **Extract the ZIP** to a folder (e.g., `scri-trial-agent`)
+3. Open Chrome and navigate to `chrome://extensions`
+4. Enable **Developer mode** (toggle in top right)
+5. Click **Load unpacked**
+6. Select the **extracted folder** (not the ZIP file)
 
-### Build from Source
+### Option 2: Build from Source
+
+**Prerequisites:** Node.js 18+ and npm
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/scri-trial-agent.git
-cd scri-trial-agent
+git clone https://github.com/pgazmuri/SCRITrialAgent.git
+cd SCRITrialAgent
 
 # Install dependencies
 npm install
@@ -32,8 +37,7 @@ npm install
 npm run build
 ```
 
-### Load in Chrome
-
+Then load in Chrome:
 1. Open Chrome and navigate to `chrome://extensions`
 2. Enable **Developer mode** (toggle in top right)
 3. Click **Load unpacked**
@@ -41,9 +45,7 @@ npm run build
 
 ### Configure API Key
 
-1. Click the extension icon in Chrome toolbar
-2. Enter your OpenAI API key in the popup
-3. Click **Save**
+On first use, the extension will prompt you to enter your OpenAI API key directly in the chat interface. You can get an API key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
 
 ## 🚀 Usage
 
