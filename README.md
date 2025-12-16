@@ -14,7 +14,7 @@ An AI-powered browser extension that helps patients find relevant clinical trial
 
 ### Option 1: Download Release (Recommended)
 
-1. Download the latest `scri-trial-agent-v*.zip` from [Releases](https://github.com/pgazmuri/SCRITrialAgent/releases) or the repo root
+1. Download the latest `scri-trial-agent-v*.zip` from the [releases folder](https://github.com/pgazmuri/SCRITrialAgent/tree/main/releases)
 2. **Extract the ZIP** to a folder (e.g., `scri-trial-agent`)
 3. Open Chrome and navigate to `chrome://extensions`
 4. Enable **Developer mode** (toggle in top right)
