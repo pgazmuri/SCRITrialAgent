@@ -568,7 +568,8 @@ Help patients find the RIGHT clinical trial, not just ANY clinical trial. Qualit
     this.log('log', `[Agent] Initial response id: ${response.id.slice(0, 20)}, status: ${response.status}`);
 
     // Process tool calls if any
-    let allTrials: TrialSummary[] = [];
+    // Note: allTrials can contain either TrialSummary (from get_study_details) or TrialSearchResult (from search_trials)
+    let allTrials: (TrialSummary | TrialSearchResult)[] = [];
     let loopCount = 0;
     const maxLoops = 10; // Safety limit
     
@@ -604,9 +605,16 @@ Help patients find the RIGHT clinical trial, not just ANY clinical trial. Qualit
           
           // Collect trials from search results
           if (call.name === 'search_trials' && typeof result === 'object' && result !== null) {
-            const searchResult = result as { trials: TrialSummary[] };
+            const searchResult = result as { trials: TrialSearchResult[] };
             if (searchResult.trials) {
               allTrials = [...allTrials, ...searchResult.trials];
+            }
+          }
+          // Also collect trials from get_study_details
+          if (call.name === 'get_study_details' && typeof result === 'object' && result !== null) {
+            const detailResult = result as { found: boolean; trial?: TrialSummary };
+            if (detailResult.found && detailResult.trial) {
+              allTrials = [...allTrials, detailResult.trial];
             }
           }
           

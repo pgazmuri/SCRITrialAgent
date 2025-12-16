@@ -461,33 +461,52 @@ function renderMessages(): void {
       if (msg.trials && msg.trials.length > 0) {
         trialsHtml = `
           <div class="scri-agent-trials">
-            ${msg.trials.slice(0, 5).map((trial) => `
-              <div class="scri-agent-trial-card" data-scri-url="${trial.scriUrl || ''}" data-ctgov-url="${trial.ctGovUrl || ''}">
-                <div class="scri-agent-trial-header">
-                  <strong>${escapeHtml(trial.name)}</strong>
-                  <span class="scri-agent-trial-phase">${trial.phases?.join(', ') || ''}</span>
-                </div>
-                <div class="scri-agent-trial-nct">${escapeHtml(trial.nctId)}</div>
-                <div class="scri-agent-trial-title">${escapeHtml(trial.title)}</div>
-                ${trial.closestLocation ? `
+            ${msg.trials.slice(0, 5).map((trial) => {
+              // Build SCRI URL from ID if not provided
+              const scriUrl = trial.scriUrl || (trial.id ? `https://trials.scri.com/trial/${trial.id}` : '#');
+              // Build location display - handles both TrialSummary and TrialSearchResult formats
+              let locationHtml = '';
+              if (trial.closestLocation) {
+                // Full TrialSummary format
+                locationHtml = `
                   <div class="scri-agent-trial-location">
                     📍 ${escapeHtml(trial.closestLocation.city)}, ${escapeHtml(trial.closestLocation.state)}
                     ${trial.closestLocation.distance ? ` (~${trial.closestLocation.distance} mi)` : ''}
                     ${trial.locationCount > 1 ? ` • +${trial.locationCount - 1} more locations` : ''}
                   </div>
-                ` : ''}
+                `;
+              } else if ((trial as any).closestCity) {
+                // Slim TrialSearchResult format
+                const slim = trial as any;
+                locationHtml = `
+                  <div class="scri-agent-trial-location">
+                    📍 ${escapeHtml(slim.closestCity || '')}, ${escapeHtml(slim.closestState || '')}
+                    ${slim.distance ? ` (~${slim.distance} mi)` : ''}
+                  </div>
+                `;
+              }
+              
+              return `
+              <div class="scri-agent-trial-card" data-scri-url="${scriUrl}">
+                <div class="scri-agent-trial-header">
+                  <strong>${escapeHtml(trial.name)}</strong>
+                  <span class="scri-agent-trial-phase">${trial.phases?.join(', ') || ''}</span>
+                </div>
+                <div class="scri-agent-trial-nct">${escapeHtml(trial.nctId)}</div>
+                ${trial.title ? `<div class="scri-agent-trial-title">${escapeHtml(trial.title)}</div>` : ''}
+                ${locationHtml}
                 <div class="scri-agent-trial-links">
-                  <a href="${trial.scriUrl || '#'}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-primary" onclick="event.stopPropagation()">
-                    View on SCRI
+                  <a href="${scriUrl}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-primary" onclick="event.stopPropagation()">
+                    🏥 View on SCRI
                   </a>
-                  ${trial.ctGovUrl ? `
-                    <a href="${trial.ctGovUrl}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-secondary" onclick="event.stopPropagation()">
-                      ClinicalTrials.gov
+                  ${trial.nctId ? `
+                    <a href="https://clinicaltrials.gov/study/${trial.nctId}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-secondary" onclick="event.stopPropagation()">
+                      📋 View on CT.gov
                     </a>
                   ` : ''}
                 </div>
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
         `;
       }

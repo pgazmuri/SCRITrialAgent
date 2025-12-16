@@ -203,7 +203,9 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log('SCRI Trial Agent installed');
-    // Open options page or show welcome message
+  } else if (details.reason === 'update') {
+    const version = chrome.runtime.getManifest().version;
+    console.log('SCRI Trial Agent updated to', version);
   }
 });
 

@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+  Chrome Extension Auto-Update Manifest
+  
+  IMPORTANT: To enable auto-updates, you need to:
+  1. Update the 'version' below when releasing a new version
+  2. Update the 'codebase' URL to point to the new CRX file
+  3. The 'appid' will be automatically generated when users install the extension
+  
+  Note: Auto-updates only work for extensions installed from CRX files,
+  not for unpacked developer mode extensions.
+  
+  For more info: https://developer.chrome.com/docs/extensions/how-to/distribute/host-on-linux
+-->
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='hfhlcciohkpiiokidlfkhcfccpcghcfm'>
+    <updatecheck codebase='https://github.com/pgazmuri/SCRITrialAgent/releases/latest/download/scri-trial-agent.crx' version='1.0.0' />
+  </app>
+</gupdate>

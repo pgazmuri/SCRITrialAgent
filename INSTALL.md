@@ -4,7 +4,7 @@
 
 ### Step 1: Download the Extension
 
-1. Go to the [Releases page](https://github.com/your-repo/scri-trial-agent/releases)
+1. Go to the [Releases page](https://github.com/pgazmuri/SCRITrialAgent/releases)
 2. Download the latest `scri-trial-agent-vX.X.X.zip` file
 3. Extract the ZIP to a folder (remember where you put it!)
 
@@ -41,8 +41,8 @@ If you want to build the extension yourself:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/scri-trial-agent.git
-cd scri-trial-agent
+git clone https://github.com/pgazmuri/SCRITrialAgent.git
+cd SCRITrialAgent
 
 # Install dependencies
 npm install
@@ -85,8 +85,12 @@ The AI takes a few seconds to search and respond. If it's stuck, try refreshing 
 
 ## Updating the Extension
 
-1. Download the new version from Releases
-2. Extract to a **new folder** (or delete the old files first)
+The extension includes an `update_url` in its manifest that points to GitHub. However, for **unpacked extensions loaded in developer mode**, Chrome does not automatically check for updates.
+
+**To update manually:**
+
+1. Download the new version from [Releases](https://github.com/pgazmuri/SCRITrialAgent/releases)
+2. Extract to the **same folder** (overwriting old files) or a new folder
 3. Go to `chrome://extensions`
 4. Click the **Reload** button (🔄) on the SCRI Trial Agent card
 
