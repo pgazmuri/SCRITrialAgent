@@ -11,10 +11,6 @@
 import { TrialAgent } from '@/services/agent';
 import type { ExtensionMessage, PatientProfile, STORAGE_KEYS } from '@/types';
 
-// Embedded API key from build (from openai.key file)
-declare const __EMBEDDED_API_KEY__: string;
-const EMBEDDED_KEY = typeof __EMBEDDED_API_KEY__ !== 'undefined' ? __EMBEDDED_API_KEY__ : '';
-
 // Agent instance (created when API key is available)
 let agent: TrialAgent | null = null;
 
@@ -74,12 +70,12 @@ async function getAgent(): Promise<TrialAgent> {
     return agent;
   }
 
-  // Get API key from storage, fall back to embedded key
+  // Get API key from storage - user must configure it in popup
   const result = await chrome.storage.local.get(['openai_api_key', 'patient_profile']);
-  const apiKey = result.openai_api_key || EMBEDDED_KEY;
+  const apiKey = result.openai_api_key;
 
   if (!apiKey) {
-    throw new Error('OpenAI API key not configured. Please set it in the extension popup.');
+    throw new Error('OpenAI API key not configured. Please click the extension icon and add your API key in Settings.');
   }
 
   // Create agent with log forwarding callback
@@ -147,8 +143,7 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
 
     case 'GET_API_KEY': {
       const result = await chrome.storage.local.get('openai_api_key');
-      // Check for embedded key as well
-      const key = result.openai_api_key || EMBEDDED_KEY;
+      const key = result.openai_api_key;
       return {
         hasKey: !!key,
         maskedKey: key ? `${key.slice(0, 7)}...${key.slice(-4)}` : null,

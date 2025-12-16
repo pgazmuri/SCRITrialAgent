@@ -1,18 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import { copyFileSync, mkdirSync, existsSync, readdirSync, renameSync, writeFileSync, readFileSync, rmSync, unlinkSync } from 'fs';
-
-// Read API key from file if it exists (for development)
-const getApiKey = () => {
-  try {
-    if (existsSync('openai.key')) {
-      return readFileSync('openai.key', 'utf-8').trim();
-    }
-  } catch (e) {
-    // Ignore errors
-  }
-  return '';
-};
+import { copyFileSync, mkdirSync, existsSync, readdirSync, writeFileSync, readFileSync, rmSync, unlinkSync } from 'fs';
 
 // Plugin to copy static files and fix paths after build
 const copyStaticFiles = () => ({
@@ -71,9 +59,6 @@ const copyStaticFiles = () => ({
 });
 
 export default defineConfig({
-  define: {
-    '__EMBEDDED_API_KEY__': JSON.stringify(getApiKey()),
-  },
   plugins: [copyStaticFiles()],
   build: {
     outDir: 'dist',

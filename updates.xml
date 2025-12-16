@@ -14,6 +14,6 @@
 -->
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
   <app appid='hfhlcciohkpiiokidlfkhcfccpcghcfm'>
-    <updatecheck codebase='https://github.com/pgazmuri/SCRITrialAgent/releases/latest/download/scri-trial-agent.crx' version='1.0.0' />
+    <updatecheck codebase='https://github.com/pgazmuri/SCRITrialAgent/releases/latest/download/scri-trial-agent.crx' version='1.0.1' />
   </app>
 </gupdate>
