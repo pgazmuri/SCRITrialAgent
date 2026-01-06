@@ -119,11 +119,23 @@ async function handleMessage(message: ExtensionMessage): Promise<unknown> {
     case 'CHAT_MESSAGE': {
       forwardLog('log', '[Background] 💬 Chat message received:', message.payload.message || message.payload.text);
       const agentInstance = await getAgent();
+      
+      // Pass current trial list to agent if available
+      if (message.payload.currentTrialList) {
+        agentInstance.setCurrentTrialList(message.payload.currentTrialList);
+      }
+      
       const response = await agentInstance.chat(message.payload.message || message.payload.text);
       // Save conversation state after each chat for persistence
       await saveConversationState();
-      forwardLog('log', '[Background] ✅ Chat response ready, trials:', response.trials?.length || 0);
-      return { text: response.text, trials: response.trials };
+      forwardLog('log', '[Background] ✅ Chat response ready, trials:', response.trials?.length || 0, 'eligibility updates:', response.eligibilityUpdates?.length || 0, 'trials to add:', response.trialsToAdd?.length || 0, 'trials to remove:', response.trialsToRemove?.length || 0);
+      return { 
+        text: response.text, 
+        trials: response.trials,
+        eligibilityUpdates: response.eligibilityUpdates,
+        trialsToAdd: response.trialsToAdd,
+        trialsToRemove: response.trialsToRemove,
+      };
     }
 
     case 'RESET_CONVERSATION': {

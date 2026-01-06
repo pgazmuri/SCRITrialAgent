@@ -192,10 +192,10 @@ describe('TrialAgent', () => {
 
       expect(prompt).toContain('clinical trial');
       expect(prompt).toContain('SCRI');
-      // Quality-focused elements
-      expect(prompt).toContain('Quality');
+      // Funnel-focused elements
+      expect(prompt).toContain('My Trials');
       expect(prompt).toContain('search_trials');
-      expect(prompt).toContain('get_study_details');
+      expect(prompt).toContain('check_patient_eligibility');
     });
 
     it('should include patient profile in system prompt when provided', () => {

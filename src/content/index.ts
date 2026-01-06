@@ -7,12 +7,18 @@
  * - Bridge communication with background worker
  */
 
-import type { ExtensionMessage, ChatMessage } from '@/types';
+import type { ExtensionMessage, ChatMessage, TrialListItem, TrialSearchResult, TrialSummary, EligibilityStatus } from '@/types';
 
 // State
 let chatMessages: ChatMessage[] = [];
 let isLoading = false;
 let originalSearchContent: HTMLElement | null = null;
+
+// Trial list state ("shopping cart")
+let trialList: TrialListItem[] = [];
+
+// Cache for trial data (to avoid escaping issues with JSON in HTML attributes)
+const trialDataCache = new Map<string, TrialSearchResult | TrialSummary>();
 
 /**
  * Initialize the content script
@@ -68,6 +74,11 @@ function watchForSearchContainer(): void {
  * Find the search-container and replace its content with tabbed interface
  */
 function injectTabbedInterface(): void {
+  // Reset conversation on each page load for fresh start
+  chrome.runtime.sendMessage({ type: 'RESET_CONVERSATION' }).catch(() => {
+    // Ignore errors - background might not be ready yet
+  });
+  
   // Target the search-container specifically
   const searchContainer = document.querySelector('.search-container') as HTMLElement;
   
@@ -107,63 +118,99 @@ function createTabbedInterface(searchContainer: HTMLElement): void {
           </button>
         </div>
 
-        <!-- Tab Content -->
+        <!-- Tab Content - Now Two Column Layout -->
         <div class="scri-agent-tab-content">
           <!-- Chat Tab -->
           <div id="scri-agent-chat-tab" class="scri-agent-tab-panel active">
-            <div class="scri-agent-chat-container" id="scri-agent-chat-container">
-              <!-- Welcome State (centered) -->
-              <div class="scri-agent-welcome" id="scri-agent-welcome">
-                <div class="scri-agent-welcome-icon">🔬</div>
-                <h1 class="scri-agent-welcome-title">Find Your Clinical Trial</h1>
-                <p class="scri-agent-welcome-subtitle">I'll help you discover SCRI trials that match your needs</p>
-                
-                <div class="scri-agent-welcome-input-area">
-                  <textarea 
-                    id="scri-agent-input" 
-                    class="scri-agent-input" 
-                    placeholder="Tell me about your cancer type and location..."
-                    rows="1"
-                  ></textarea>
-                  <button id="scri-agent-send" class="scri-agent-send-btn" aria-label="Send message">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 20px !important; height: 20px !important; min-width: 20px; min-height: 20px;">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  </button>
-                </div>
-                
-                <div class="scri-agent-suggestions">
-                  <button class="scri-agent-suggestion" data-query="I have breast cancer and live in Nashville, TN (37203)">
-                    🎀 Breast cancer near Nashville
-                  </button>
-                  <button class="scri-agent-suggestion" data-query="I have lung cancer and live in Denver, CO (80202)">
-                    🫁 Lung cancer near Denver
-                  </button>
-                  <button class="scri-agent-suggestion" data-query="What types of cancer do you have trials for?">
-                    📋 See all cancer types
-                  </button>
+            <div class="scri-agent-two-column">
+              <!-- Left Column: Chat Interface -->
+              <div class="scri-agent-chat-column">
+                <div class="scri-agent-chat-container" id="scri-agent-chat-container">
+                  <!-- Welcome State (centered) -->
+                  <div class="scri-agent-welcome" id="scri-agent-welcome">
+                    <div class="scri-agent-welcome-icon">🔬</div>
+                    <h1 class="scri-agent-welcome-title">Find Your Clinical Trial</h1>
+                    <p class="scri-agent-welcome-subtitle">I'll help you discover SCRI trials that match your needs</p>
+                    
+                    <div class="scri-agent-welcome-input-area">
+                      <textarea 
+                        id="scri-agent-input" 
+                        class="scri-agent-input" 
+                        placeholder="Tell me about your cancer type and location..."
+                        rows="1"
+                      ></textarea>
+                      <button id="scri-agent-send" class="scri-agent-send-btn" aria-label="Send message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 20px !important; height: 20px !important; min-width: 20px; min-height: 20px;">
+                          <line x1="22" y1="2" x2="11" y2="13"></line>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    <div class="scri-agent-suggestions">
+                      <button class="scri-agent-suggestion" data-query="I have breast cancer and live in Nashville, TN (37203)">
+                        🎀 Breast cancer near Nashville
+                      </button>
+                      <button class="scri-agent-suggestion" data-query="I have lung cancer and live in Denver, CO (80202)">
+                        🫁 Lung cancer near Denver
+                      </button>
+                      <button class="scri-agent-suggestion" data-query="What types of cancer do you have trials for?">
+                        📋 See all cancer types
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Chat State (after first message) -->
+                  <div class="scri-agent-chat-active" id="scri-agent-chat-active" style="display: none;">
+                    <div id="scri-agent-messages" class="scri-agent-messages">
+                      <!-- Messages will be inserted here -->
+                    </div>
+                    
+                    <div class="scri-agent-input-area-bottom">
+                      <textarea 
+                        id="scri-agent-input-active" 
+                        class="scri-agent-input" 
+                        placeholder="Ask a follow-up question..."
+                        rows="1"
+                      ></textarea>
+                      <button id="scri-agent-send-active" class="scri-agent-send-btn" aria-label="Send message">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 20px !important; height: 20px !important; min-width: 20px; min-height: 20px;">
+                          <line x1="22" y1="2" x2="11" y2="13"></line>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <!-- Chat State (after first message) -->
-              <div class="scri-agent-chat-active" id="scri-agent-chat-active" style="display: none;">
-                <div id="scri-agent-messages" class="scri-agent-messages">
-                  <!-- Messages will be inserted here -->
+              <!-- Right Column: My Trials Panel -->
+              <div class="scri-agent-trials-column" id="scri-agent-trials-panel">
+                <div class="scri-agent-trials-header">
+                  <h2 class="scri-agent-trials-title">
+                    <span>📋</span> My Trials
+                    <span class="scri-agent-trials-count" id="scri-agent-trials-count">0</span>
+                  </h2>
+                  <button class="scri-agent-trials-clear" id="scri-agent-clear-list" title="Clear all trials">
+                    🗑️
+                  </button>
                 </div>
                 
-                <div class="scri-agent-input-area-bottom">
-                  <textarea 
-                    id="scri-agent-input-active" 
-                    class="scri-agent-input" 
-                    placeholder="Ask a follow-up question..."
-                    rows="1"
-                  ></textarea>
-                  <button id="scri-agent-send-active" class="scri-agent-send-btn" aria-label="Send message">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="width: 20px !important; height: 20px !important; min-width: 20px; min-height: 20px;">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
+                <div class="scri-agent-trials-list" id="scri-agent-trials-list">
+                  <!-- Empty state -->
+                  <div class="scri-agent-trials-empty" id="scri-agent-trials-empty">
+                    <div class="scri-agent-trials-empty-icon">📝</div>
+                    <p>No trials added yet</p>
+                    <p class="scri-agent-trials-empty-hint">Search for trials and click "Add to My List" to start building your list</p>
+                  </div>
+                </div>
+                
+                <div class="scri-agent-trials-actions" id="scri-agent-trials-actions" style="display: none;">
+                  <div class="scri-agent-eligibility-summary" id="scri-agent-eligibility-summary">
+                    <!-- Eligibility summary will be rendered here -->
+                  </div>
+                  <button class="scri-agent-request-matching-btn" id="scri-agent-request-matching">
+                    ✉️ Request Matching for Selected Trials
                   </button>
                 </div>
               </div>
@@ -386,6 +433,21 @@ function attachEventListeners(): void {
       textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
     });
   });
+  
+  // Trial list panel - Clear button
+  const clearBtn = document.getElementById('scri-agent-clear-list');
+  clearBtn?.addEventListener('click', () => {
+    if (trialList.length === 0) return;
+    if (confirm('Are you sure you want to clear all trials from your list?')) {
+      clearTrialList();
+    }
+  });
+  
+  // Trial list panel - Request Matching button
+  const requestMatchingBtn = document.getElementById('scri-agent-request-matching');
+  requestMatchingBtn?.addEventListener('click', () => {
+    showMatchingRequestModal();
+  });
 }
 
 /**
@@ -493,10 +555,22 @@ async function sendChatMessage(text: string): Promise<void> {
   updateStatus('Searching trials...');
 
   try {
-    // Send to background worker
+    // Send to background worker with current trial list
+    const currentTrialListData = trialList.map(item => ({
+      id: item.trial.id,
+      name: item.trial.name,
+      title: item.trial.title,
+      nctId: item.trial.nctId,
+      status: item.status,
+      statusReason: item.statusReason,
+    }));
+    
     const response = await chrome.runtime.sendMessage({
       type: 'CHAT',
-      payload: { message: text },
+      payload: { 
+        message: text,
+        currentTrialList: currentTrialListData,
+      },
     } as ExtensionMessage);
 
     // Remove loading message
@@ -523,6 +597,37 @@ async function sendChatMessage(text: string): Promise<void> {
       trials: response?.trials,
     };
     addMessage(agentMessage);
+    
+    // Process any eligibility updates from the agent
+    if (response?.eligibilityUpdates && response.eligibilityUpdates.length > 0) {
+      for (const update of response.eligibilityUpdates) {
+        updateTrialStatus(update.trialId, update.status as EligibilityStatus, update.reason);
+      }
+    }
+    
+    // Process any trials the agent wants to add to the list
+    if (response?.trialsToAdd && response.trialsToAdd.length > 0) {
+      console.log('[SCRI Agent] Agent adding trials to list:', response.trialsToAdd.length);
+      for (const addition of response.trialsToAdd) {
+        // Build a trial object from what the agent returned
+        const trialData = addition.trialData as TrialSearchResult | TrialSummary;
+        if (trialData && trialData.id) {
+          addTrialToList(trialData);
+          // If agent provided a reason, update the status
+          if (addition.reason) {
+            updateTrialStatus(trialData.id, 'unknown', addition.reason);
+          }
+        }
+      }
+    }
+    
+    // Process any trials the agent wants to remove from the list
+    if (response?.trialsToRemove && response.trialsToRemove.length > 0) {
+      console.log('[SCRI Agent] Agent removing trials from list:', response.trialsToRemove.length);
+      for (const removal of response.trialsToRemove) {
+        removeTrialFromList(removal.trialId);
+      }
+    }
 
   } catch (error) {
     removeMessage(loadingMessage.id);
@@ -596,6 +701,13 @@ function renderMessages(): void {
       
       let trialsHtml = '';
       if (msg.trials && msg.trials.length > 0) {
+        // Cache trial data for later retrieval
+        msg.trials.slice(0, 5).forEach(trial => {
+          if (trial.id) {
+            trialDataCache.set(trial.id, trial);
+          }
+        });
+        
         trialsHtml = `
           <div class="scri-agent-trials">
             ${msg.trials.slice(0, 5).map((trial) => {
@@ -624,7 +736,7 @@ function renderMessages(): void {
               }
               
               return `
-              <div class="scri-agent-trial-card" data-scri-url="${scriUrl}">
+              <div class="scri-agent-trial-card" data-scri-url="${scriUrl}" data-trial-id="${trial.id}">
                 <div class="scri-agent-trial-header">
                   <strong>${escapeHtml(trial.name)}</strong>
                   <span class="scri-agent-trial-phase">${trial.phases?.join(', ') || ''}</span>
@@ -633,12 +745,15 @@ function renderMessages(): void {
                 ${trial.title ? `<div class="scri-agent-trial-title">${escapeHtml(trial.title)}</div>` : ''}
                 ${locationHtml}
                 <div class="scri-agent-trial-links">
-                  <a href="${scriUrl}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-primary" onclick="event.stopPropagation()">
-                    🏥 View on SCRI
+                  <button class="scri-agent-add-to-list-btn" data-trial-id="${trial.id}">
+                    ➕ Add to My List
+                  </button>
+                  <a href="${scriUrl}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-primary">
+                    🏥 SCRI
                   </a>
                   ${trial.nctId ? `
-                    <a href="https://clinicaltrials.gov/study/${trial.nctId}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-secondary" onclick="event.stopPropagation()">
-                      📋 View on CT.gov
+                    <a href="https://clinicaltrials.gov/study/${trial.nctId}" target="_blank" class="scri-agent-trial-link scri-agent-trial-link-secondary">
+                      📋 CT.gov
                     </a>
                   ` : ''}
                 </div>
@@ -662,12 +777,37 @@ function renderMessages(): void {
   // Attach trial card click handlers - clicking the card itself opens SCRI
   container.querySelectorAll('.scri-agent-trial-card').forEach((card) => {
     card.addEventListener('click', (e) => {
-      // Don't trigger if clicking a link
-      if ((e.target as HTMLElement).tagName === 'A') return;
+      // Don't trigger if clicking a link or button
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'A' || target.tagName === 'BUTTON') return;
       
       const scriUrl = card.getAttribute('data-scri-url');
       if (scriUrl) {
         window.open(scriUrl, '_blank');
+      }
+    });
+  });
+  
+  // Attach "Add to My List" button handlers
+  container.querySelectorAll('.scri-agent-add-to-list-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const trialId = (btn as HTMLElement).getAttribute('data-trial-id');
+      console.log('[SCRI Agent] Add to list button clicked, trialId:', trialId);
+      console.log('[SCRI Agent] Cache size:', trialDataCache.size, 'Cache keys:', Array.from(trialDataCache.keys()));
+      if (trialId) {
+        const trial = trialDataCache.get(trialId);
+        console.log('[SCRI Agent] Trial from cache:', trial);
+        if (trial) {
+          addTrialToList(trial);
+          // Update button to show "Added"
+          (btn as HTMLElement).textContent = '✓ Added';
+          (btn as HTMLElement).classList.add('scri-agent-add-to-list-btn-added');
+          (btn as HTMLButtonElement).disabled = true;
+        } else {
+          console.error('[SCRI Agent] Trial not found in cache:', trialId);
+        }
       }
     });
   });
@@ -699,7 +839,8 @@ function formatMessageContent(content: string): string {
 /**
  * Escape HTML to prevent XSS
  */
-function escapeHtml(text: string): string {
+function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
@@ -727,6 +868,207 @@ function scrollToMessageStart(messageId: string): void {
     // Calculate position with 5px buffer above the message
     const messageTop = messageEl.offsetTop - 5;
     container.scrollTo({ top: messageTop, behavior: 'smooth' });
+  }
+}
+
+// ============================================
+// TRIAL LIST MANAGEMENT ("Shopping Cart")
+// ============================================
+
+/**
+ * Add a trial to the user's consideration list
+ */
+function addTrialToList(trial: TrialSearchResult | TrialSummary): void {
+  // Check if already in list
+  if (trialList.some(item => item.trial.id === trial.id)) {
+    console.log('[SCRI Agent] Trial already in list:', trial.name);
+    return;
+  }
+  
+  const item: TrialListItem = {
+    trial,
+    addedAt: new Date(),
+    status: 'unknown',
+  };
+  
+  trialList.push(item);
+  renderTrialList();
+  
+  console.log('[SCRI Agent] Added trial to list:', trial.name, 'Total:', trialList.length);
+}
+
+/**
+ * Remove a trial from the list
+ */
+function removeTrialFromList(trialId: string): void {
+  trialList = trialList.filter(item => item.trial.id !== trialId);
+  renderTrialList();
+}
+
+/**
+ * Update a trial's eligibility status
+ */
+function updateTrialStatus(trialId: string, status: EligibilityStatus, reason?: string): void {
+  const item = trialList.find(i => i.trial.id === trialId);
+  if (item) {
+    item.status = status;
+    item.statusReason = reason;
+    renderTrialList();
+  }
+}
+
+/**
+ * Clear all trials from the list
+ */
+function clearTrialList(): void {
+  trialList = [];
+  renderTrialList();
+}
+
+/**
+ * Get status indicator HTML
+ */
+function getStatusIndicator(status: EligibilityStatus): string {
+  switch (status) {
+    case 'likely_eligible':
+      return '<span class="scri-agent-status-badge scri-agent-status-eligible" title="Likely Eligible">✅</span>';
+    case 'likely_ineligible':
+      return '<span class="scri-agent-status-badge scri-agent-status-ineligible" title="Likely Ineligible">❌</span>';
+    case 'needs_review':
+      return '<span class="scri-agent-status-badge scri-agent-status-review" title="Needs Physician Review">⚠️</span>';
+    default:
+      return '<span class="scri-agent-status-badge scri-agent-status-unknown" title="Eligibility Unknown">❓</span>';
+  }
+}
+
+/**
+ * Render the trial list panel
+ */
+function renderTrialList(): void {
+  const listContainer = document.getElementById('scri-agent-trials-list');
+  const countEl = document.getElementById('scri-agent-trials-count');
+  const actionsEl = document.getElementById('scri-agent-trials-actions');
+  const summaryEl = document.getElementById('scri-agent-eligibility-summary');
+  
+  if (!listContainer) return;
+  
+  // Update count
+  if (countEl) {
+    countEl.textContent = String(trialList.length);
+  }
+  
+  // Show/hide empty state and actions
+  if (trialList.length === 0) {
+    if (actionsEl) actionsEl.style.display = 'none';
+    // Render empty state
+    listContainer.innerHTML = `
+      <div class="scri-agent-trials-empty">
+        <div class="scri-agent-trials-empty-icon">📝</div>
+        <p>No trials added yet</p>
+        <p class="scri-agent-trials-empty-hint">Search for trials and click "Add to My List" to start building your list</p>
+      </div>
+    `;
+    return;
+  }
+  
+  if (actionsEl) actionsEl.style.display = 'block';
+  
+  // Count by status
+  const statusCounts = {
+    likely_eligible: trialList.filter(t => t.status === 'likely_eligible').length,
+    likely_ineligible: trialList.filter(t => t.status === 'likely_ineligible').length,
+    needs_review: trialList.filter(t => t.status === 'needs_review').length,
+    unknown: trialList.filter(t => t.status === 'unknown').length,
+  };
+  
+  // Render eligibility summary
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div class="scri-agent-eligibility-counts">
+        ${statusCounts.likely_eligible > 0 ? `<span class="scri-agent-status-count eligible">✅ ${statusCounts.likely_eligible} Likely Eligible</span>` : ''}
+        ${statusCounts.needs_review > 0 ? `<span class="scri-agent-status-count review">⚠️ ${statusCounts.needs_review} Needs Review</span>` : ''}
+        ${statusCounts.unknown > 0 ? `<span class="scri-agent-status-count unknown">❓ ${statusCounts.unknown} Unknown</span>` : ''}
+        ${statusCounts.likely_ineligible > 0 ? `<span class="scri-agent-status-count ineligible">❌ ${statusCounts.likely_ineligible} Likely Ineligible</span>` : ''}
+      </div>
+    `;
+  }
+  
+  // Render trial cards
+  listContainer.innerHTML = trialList.map(item => {
+    const trial = item.trial;
+    const scriUrl = trial.scriUrl || `https://trials.scri.com/trialdetail/${trial.id}`;
+    
+    // Get location info - handle both formats
+    let locationHtml = '';
+    if ('closestLocation' in trial && trial.closestLocation) {
+      locationHtml = `📍 ${escapeHtml(trial.closestLocation.city)}, ${escapeHtml(trial.closestLocation.state)}`;
+    } else if ('closestCity' in trial && trial.closestCity) {
+      locationHtml = `📍 ${escapeHtml(trial.closestCity)}, ${escapeHtml((trial as TrialSearchResult).closestState || '')}`;
+    }
+    
+    const ineligibleClass = item.status === 'likely_ineligible' ? 'scri-agent-trial-item-ineligible' : '';
+    
+    return `
+      <div class="scri-agent-trial-item ${ineligibleClass}" data-trial-id="${trial.id}">
+        <div class="scri-agent-trial-item-header">
+          ${getStatusIndicator(item.status)}
+          <strong class="scri-agent-trial-item-name">${escapeHtml(trial.name)}</strong>
+          <button class="scri-agent-trial-item-remove" data-remove-id="${trial.id}" title="Remove from list">×</button>
+        </div>
+        <div class="scri-agent-trial-item-title">${escapeHtml(trial.title)}</div>
+        ${locationHtml ? `<div class="scri-agent-trial-item-location">${locationHtml}</div>` : ''}
+        ${item.statusReason ? `<div class="scri-agent-trial-item-reason">${escapeHtml(item.statusReason)}</div>` : ''}
+        <div class="scri-agent-trial-item-links">
+          <a href="${scriUrl}" target="_blank" class="scri-agent-mini-link">View on SCRI</a>
+          ${trial.nctId ? `<a href="https://clinicaltrials.gov/study/${trial.nctId}" target="_blank" class="scri-agent-mini-link">CT.gov</a>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Attach remove button handlers
+  listContainer.querySelectorAll('.scri-agent-trial-item-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const trialId = (btn as HTMLElement).getAttribute('data-remove-id');
+      if (trialId) {
+        removeTrialFromList(trialId);
+      }
+    });
+  });
+}
+
+/**
+ * Show matching request modal
+ */
+function showMatchingRequestModal(): void {
+  const eligibleTrials = trialList.filter(t => t.status !== 'likely_ineligible');
+  
+  if (eligibleTrials.length === 0) {
+    alert('No eligible trials to request matching for. All trials in your list appear to be ineligible based on your profile.');
+    return;
+  }
+  
+  const trialNames = eligibleTrials.map(t => `• ${t.trial.name}: ${t.trial.title}`).join('\n');
+  
+  const confirmed = confirm(
+    `📬 Request Matching\n\n` +
+    `You are about to request matching for ${eligibleTrials.length} trial(s):\n\n` +
+    `${trialNames}\n\n` +
+    `A clinical trial coordinator will review your request and contact you to discuss next steps.\n\n` +
+    `Click OK to submit your request.`
+  );
+  
+  if (confirmed) {
+    // In a real implementation, this would submit to a backend
+    alert(
+      `✅ Request Submitted!\n\n` +
+      `Your matching request for ${eligibleTrials.length} trial(s) has been submitted.\n\n` +
+      `A coordinator from Sarah Cannon Research Institute will contact you within 2-3 business days.\n\n` +
+      `Reference ID: ${generateId()}`
+    );
+    
+    console.log('[SCRI Agent] Matching request submitted for:', eligibleTrials.map(t => t.trial.name));
   }
 }
 
